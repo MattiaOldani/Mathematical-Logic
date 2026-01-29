@@ -1,0 +1,9 @@
+# Spell checker
+.vscode/
+
+# Python stuff
+venv/
+
+# Slide e dispense
+slide/
+dispense/
