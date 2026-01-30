@@ -69,7 +69,8 @@ class BDD:
 
 
 def evaluate_expression(expression: str, truth_values: dict[str, bool]) -> bool:
-    for name, value in truth_values.items():
+    items = sorted(truth_values.items(), key=lambda x: len(x[0]), reverse=True)
+    for name, value in items:
         expression = expression.replace(name, str(value).upper())
 
     return eval(grammar_2_python(expression))
