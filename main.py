@@ -4,17 +4,17 @@ from collections import defaultdict
 
 
 class Node:
-    def __init__(self, name, ID, data):
+    def __init__(self, name: str, ID: str, data: dict):
         self.name = name
         self.ID = ID
         self.data = data
         self.T = None
         self.F = None
 
-    def set_true(self, node_ID):
+    def set_true(self, node_ID: str):
         self.T = node_ID
 
-    def set_false(self, node_ID):
+    def set_false(self, node_ID: str):
         self.F = node_ID
 
     def children(self) -> tuple:
@@ -29,15 +29,22 @@ class Node:
     def __str__(self) -> str:
         return f"{self.name}[{self.ID}]"
 
-    def __eq__(self, other) -> bool:
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Node):
             return False
 
         return self.ID == other.ID
 
+    def __hash__(self) -> int:
+        return hash((self.name, self.ID))
+
 
 class BDD:
-    def __init__(self):
+    def __init__(self, atoms: list[str]):
+        self.atoms = atoms.copy()
         self.nodes = dict()
         self.names = defaultdict(lambda: [])
         self.parents = defaultdict(lambda: [])
@@ -59,6 +66,9 @@ class BDD:
     def get_nodes_by_atom_name(self, atom: str) -> list[Node]:
         return self.names[atom]
 
+    def get_parent_by_ID(self, node_ID) -> Node:
+        return self.parents[node_ID][0]
+
     def show(self) -> None:
         self.__print(self.root, 0)
 
@@ -66,6 +76,60 @@ class BDD:
         print(f"{'  ' * depth}{node}")
         for children in node.children():
             self.__print(self.nodes[children], depth + 1)
+
+    def reduce(self) -> None:
+        self.__remove_leaves()
+
+        first, second = True, True
+        while first or second:
+            first = self.__first_layer()
+            second = self.__second_layer()
+
+    def __remove_leaves(self) -> None:
+        leaves = self.get_nodes_by_atom_name("TRUE")
+        leaves += self.get_nodes_by_atom_name("FALSE")
+        assert len(leaves) == 2 ** len(self.atoms)
+
+        parents = list(set([self.get_parent_by_ID(n.ID) for n in leaves]))
+        assert len(parents) == len(leaves) // 2
+
+        self.parents["TRUE"] = []
+        self.parents["FALSE"] = []
+
+        TRUE = Node("TRUE", "TRUE", dict())
+        FALSE = Node("FALSE", "FALSE", dict())
+
+        self.names["TRUE"] = [TRUE]
+        self.names["FALSE"] = [FALSE]
+
+        for node in parents:
+            true_node_ID, false_node_ID = node.children()
+
+            if self.nodes[true_node_ID].name == "TRUE":
+                node.set_true("TRUE")
+                self.parents["TRUE"] += [node]
+            else:
+                node.set_true("FALSE")
+                self.parents["FALSE"] += [node]
+
+            if self.nodes[false_node_ID].name == "TRUE":
+                node.set_false("TRUE")
+                self.parents["TRUE"] += [node]
+            else:
+                node.set_false("FALSE")
+                self.parents["FALSE"] += [node]
+
+        for node in leaves:
+            del node
+
+        self.nodes["TRUE"] = TRUE
+        self.nodes["FALSE"] = FALSE
+
+    def __first_layer(self) -> bool:
+        return False
+
+    def __second_layer(self) -> bool:
+        return False
 
 
 def evaluate_expression(expression: str, truth_values: dict[str, bool]) -> bool:
@@ -100,7 +164,7 @@ def main():
     for expression in expressions:
         atoms = extract_atoms(expression)
 
-        bdd = BDD()
+        bdd = BDD(atoms)
 
         root = Node(atoms[0], "", dict())
         bdd.add_root(root)
@@ -144,6 +208,9 @@ def main():
 
                 bdd.add_node(to_add, node, False)
 
+        bdd.show()
+        print("*" * 50)
+        bdd.reduce()
         bdd.show()
         print("-" * 50)
 
