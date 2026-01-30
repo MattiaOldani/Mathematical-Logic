@@ -73,6 +73,9 @@ class BDD:
         return self.parents[node_ID][0]
 
     def show(self) -> None:
+        # print(self.nodes, len(self.nodes))
+        # print(self.names, len(self.names))
+        # print(self.parents, len(self.parents))
         self.__print(self.root, 0)
 
     def __print(self, node: Node, depth: int) -> None:
@@ -124,6 +127,8 @@ class BDD:
 
         for node in leaves:
             del self.nodes[node.ID]
+            del self.parents[node.ID]
+            del node
 
         self.nodes["TRUE"] = TRUE
         self.nodes["FALSE"] = FALSE
@@ -159,6 +164,7 @@ class BDD:
 
         for node in to_remove:
             del self.nodes[node.ID]
+            del node
 
         return flag
 
