@@ -63,6 +63,9 @@ class BDD:
             parent.set_false(node.ID)
         self.parents[node.ID] += [parent]
 
+    def get_all_nodes(self) -> list[Node]:
+        return list(self.nodes.values()).copy()
+
     def get_nodes_by_atom_name(self, atom: str) -> list[Node]:
         return self.names[atom]
 
@@ -120,13 +123,52 @@ class BDD:
                 self.parents["FALSE"] += [node]
 
         for node in leaves:
-            del node
+            del self.nodes[node.ID]
 
         self.nodes["TRUE"] = TRUE
         self.nodes["FALSE"] = FALSE
 
     def __first_layer(self) -> bool:
-        return False
+        flag = False
+
+        to_remove = []
+
+        for node in self.get_all_nodes():
+            if node.is_leaf():
+                continue
+
+            c1, c2 = node.children()
+            if self.nodes[c1].ID == self.nodes[c2].ID:
+                parent = self.get_parent_by_ID(node.ID)
+                if parent.T == node.ID:
+                    parent.set_true(self.nodes[c1].ID)
+                else:
+                    parent.set_false(self.nodes[c1].ID)
+
+                self.parents[node.ID].remove(parent)
+
+                self.parents[c1].remove(node)
+                self.parents[c1] += [parent]
+
+                self.__remove_subtree(self.nodes[c1])
+                self.__remove_subtree(self.nodes[c2])
+
+                to_remove += [node]
+
+                flag = True
+
+        for node in to_remove:
+            del self.nodes[node.ID]
+
+        return flag
+
+    def __remove_subtree(self, node: Node) -> None:
+        if node.ID in ["TRUE", "FALSE"]:
+            return
+
+        self.__remove_subtree(node.T)  # type: ignore
+        self.__remove_subtree(node.T)  # type: ignore
+        del self.nodes[node.ID]
 
     def __second_layer(self) -> bool:
         return False
