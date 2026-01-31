@@ -43,13 +43,67 @@ class Node:
 
 
 class BDD:
-    def __init__(self, atoms: list[str]):
-        self.atoms = atoms.copy()
+    def __init__(self, expression: str):
         self.nodes = dict()
         self.names = defaultdict(lambda: [])
         self.parents = defaultdict(lambda: [])
 
-    def add_root(self, root: Node) -> None:
+        self.expression = expression
+        self.__extract_atoms()
+
+        atoms = self.atoms.copy()
+
+        self.__add_root(Node(atoms[0], "", dict()))
+
+        while atoms:
+            atom = atoms.pop(0)
+
+            nodes = self.__get_nodes_by_atom_name(atom)
+            for node in nodes:
+                node_data = node.data
+
+                data = node_data.copy()
+                data[atom] = True
+                data["added_atom"] = atom
+                ID = (node.ID + " " + atom).strip()
+
+                if len(atoms) > 0:
+                    to_add = Node(atoms[0], ID, data)
+                else:
+                    to_add = Node(
+                        "TRUE" if evaluate_expression(expression, data) else "FALSE",
+                        ID,
+                        data,
+                    )
+
+                self.add_node(to_add, node, True)
+
+                data = node_data.copy()
+                data[atom] = False
+                data["added_atom"] = atom
+                ID = (node.ID + " not(" + atom + ")").strip()
+
+                if len(atoms) > 0:
+                    to_add = Node(atoms[0], ID, data)
+                else:
+                    to_add = Node(
+                        "TRUE" if evaluate_expression(expression, data) else "FALSE",
+                        ID,
+                        data,
+                    )
+
+                self.add_node(to_add, node, False)
+
+    def __extract_atoms(self) -> None:
+        self.atoms = list(
+            sorted(
+                sorted(list(set(re.compile("[a-z]+").findall(self.expression)))),
+                key=len,
+                reverse=True,
+            )
+        )
+
+    def __add_root(self, root: Node) -> None:
         self.root = root
         self.nodes[root.ID] = root
         self.names[root.name] += [root]
@@ -66,7 +120,7 @@ class BDD:
     def get_all_nodes(self) -> list[Node]:
         return list(self.nodes.values()).copy()
 
-    def get_nodes_by_atom_name(self, atom: str) -> list[Node]:
+    def __get_nodes_by_atom_name(self, atom: str) -> list[Node]:
         return self.names[atom]
 
     def get_parent_by_ID(self, node_ID) -> Node:
@@ -92,8 +146,8 @@ class BDD:
             second = self.__second_layer()
 
     def __remove_leaves(self) -> None:
-        leaves = self.get_nodes_by_atom_name("TRUE")
-        leaves += self.get_nodes_by_atom_name("FALSE")
+        leaves = self.__get_nodes_by_atom_name("TRUE")
+        leaves += self.__get_nodes_by_atom_name("FALSE")
         assert len(leaves) == 2 ** len(self.atoms)
 
         parents = list(set([self.get_parent_by_ID(n.ID) for n in leaves]))
@@ -198,63 +252,11 @@ def grammar_2_python(expression: str) -> str:
     )
 
 
-def extract_atoms(expression: str) -> list[str]:
-    return sorted(
-        sorted(list(set(re.compile("[a-z]+").findall(expression)))),
-        key=len,
-        reverse=True,
-    )
-
-
 def main():
     expressions = open("expression.txt", "r").readlines()
 
     for expression in expressions:
-        atoms = extract_atoms(expression)
-
-        bdd = BDD(atoms)
-
-        root = Node(atoms[0], "", dict())
-        bdd.add_root(root)
-
-        while atoms:
-            atom = atoms.pop(0)
-
-            nodes = bdd.get_nodes_by_atom_name(atom)
-            for node in nodes:
-                node_data = node.data
-
-                data = node_data.copy()
-                data[atom] = True
-                data["added_atom"] = atom
-                ID = (node.ID + " " + atom).strip()
-
-                if len(atoms) > 0:
-                    to_add = Node(atoms[0], ID, data)
-                else:
-                    to_add = Node(
-                        "TRUE" if evaluate_expression(expression, data) else "FALSE",
-                        ID,
-                        data,
-                    )
-
-                bdd.add_node(to_add, node, True)
-
-                data = node_data.copy()
-                data[atom] = False
-                data["added_atom"] = atom
-                ID = (node.ID + " not(" + atom + ")").strip()
-
-                if len(atoms) > 0:
-                    to_add = Node(atoms[0], ID, data)
-                else:
-                    to_add = Node(
-                        "TRUE" if evaluate_expression(expression, data) else "FALSE",
-                        ID,
-                        data,
-                    )
-
-                bdd.add_node(to_add, node, False)
+        bdd = BDD(expression)
 
         bdd.show()
         print("*" * 50)
