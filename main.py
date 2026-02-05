@@ -31,9 +31,7 @@ class Node:
         return self.name == other.name and self.T == other.T and self.F == other.F
 
     def __str__(self) -> str:
-        T = "" if self.T is None else self.T.ID
-        F = "" if self.F is None else self.F.ID
-        return f"[Name:{self.name}][ID:{self.ID}][Data:{self.data}][TF:{T}:{F}]"
+        return f"[Name:{self.name}][ID:{self.ID}][Data:{self.data}]"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Node):
