@@ -3,6 +3,10 @@
 
 # Python stuff
 venv/
+__pycache__/
+
+# Antlr4 stuff
+.antlr/
 
 # Slide e dispense
 slide/
