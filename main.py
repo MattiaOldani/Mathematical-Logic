@@ -1,5 +1,5 @@
 from __future__ import annotations
-from alberelli.rbdd.rbdd import RBDD
+from alberelli.rbdd.bdd import DummyBDD
 
 from antlr4 import CommonTokenStream, InputStream
 from PLLexer import PLLexer
@@ -231,7 +231,7 @@ def main():
     expressions = [line.strip() for line in open("expression.txt", "r").readlines()]
 
     for expression in expressions:
-        bdd = RBDD(expression)
+        bdd = DummyBDD(expression)
 
         bdd.show()
         print("*" * 50)

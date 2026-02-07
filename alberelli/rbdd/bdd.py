@@ -1,23 +1,24 @@
-from alberelli.base.bdd import BDD
-from alberelli.rbdd.rnode import RNode
+from alberelli.bdd import BDD
+from alberelli.node import Node
 
 from functools import reduce
-
 import re
 
 
-class RBDD(BDD):
+class DummyBDD(BDD):
     def __init__(self, expression: str) -> None:
         self.nodes = dict()
         self.names = dict()
+        self.lookup = dict()
         self.parents = dict()
+        self.is_reduced = False
 
         self.expression = expression
         self._extract_atoms()
 
         atoms = self.atoms.copy()
 
-        self._add_root(RNode(atoms[0], "", dict()))
+        self._add_root(Node(atoms[0], None, None, None, dict()))  # type: ignore
 
         while atoms:
             atom = atoms.pop(0)
@@ -26,55 +27,54 @@ class RBDD(BDD):
             for node in nodes:
                 node_data = node.data
 
-                data = node_data.copy()
-                data[atom] = True
-                ID = (node.ID + " " + atom).strip()
+                for value in [True, False]:
+                    data = node_data.copy()
+                    data[atom] = value
 
-                if len(atoms) > 0:
-                    to_add = RNode(atoms[0], ID, data)
-                else:
-                    to_add = RNode(
-                        "TRUE"
-                        if self._evaluate_expression(expression, data)
-                        else "FALSE",
-                        ID,
-                        data,
-                    )
+                    if len(atoms) > 0:
+                        to_add = Node(atoms[0], None, None, None, data)  # type: ignore
+                    else:
+                        truth = self._evaluate_expression(expression, data)
+                        name = "TRUE" if truth else "FALSE"
+                        to_add = Node(name, None, None, truth, data)  # type: ignore
 
-                self.add_node(to_add, node, True)
-
-                data = node_data.copy()
-                data[atom] = False
-                ID = (node.ID + " not(" + atom + ")").strip()
-
-                if len(atoms) > 0:
-                    to_add = RNode(atoms[0], ID, data)
-                else:
-                    to_add = RNode(
-                        "TRUE"
-                        if self._evaluate_expression(expression, data)
-                        else "FALSE",
-                        ID,
-                        data,
-                    )
-
-                self.add_node(to_add, node, False)
+                    self._add_node(to_add, node, value)
 
         assert len(self.nodes) == 2 ** (len(self.atoms) + 1) - 1
         assert len(self.names) in {len(self.atoms) + 1, len(self.atoms) + 2}
         assert len(self.parents) == 2 ** (len(self.atoms) + 1) - 2
 
-    def add_node(self, node: RNode, parent: RNode, truth: bool) -> None:
-        self.nodes[node.ID] = node
+    def show(self) -> None:
+        print(f"Expression: {self.expression}")
+        self._print_level(self.root, 0)
+
+    def _print_level(self, node: Node, depth: int) -> None:
+        print(f"{'  ' * depth}{node}")
+        for children in node.children():
+            if children is None:
+                continue
+            self._print_level(children, depth + 1)
+
+    def reduce(self) -> None:
+        if self.is_reduced:
+            return
+
+        self._remove_leaves()
+        self.root = self._reduce(self.root)
+        self._recreate_state()
+        self.is_reduced = True
+
+    def _add_node(self, node: Node, parent: Node, truth: bool) -> None:
+        self.nodes[id(node)] = node
         self.names[node.name] = self.names.get(node.name, []) + [node]
         if truth:
-            parent.set_true(node)
+            parent.T = node
         else:
-            parent.set_false(node)
-        self.parents[node.ID] = self.parents.get(node.ID, []) + [parent]
+            parent.F = node
+        self.parents[id(node)] = self.parents.get(id(node), []) + [parent]
 
-    def delete_node(self, node: RNode) -> None:
-        del self.nodes[node.ID]
+    def _delete_node(self, node: Node) -> None:
+        del self.nodes[id(node)]
 
         self.names[node.name].remove(node)
         if len(self.names[node.name]) == 0:
@@ -89,24 +89,10 @@ class RBDD(BDD):
 
         assert len(to_remove_after) == 0
 
-        if node.ID in self.parents:
-            del self.parents[node.ID]
+        if id(node) in self.parents:
+            del self.parents[id(node)]
 
         del node
-
-    def reduce(self) -> None:
-        self._remove_leaves()
-        self.root = self._reduce(self.root)
-        self._recreate_state()
-
-    def show(self) -> None:
-        print(f"Expression: {self.expression}")
-        self._print_level(self.root, 0)
-
-    def _print_level(self, node: RNode, depth: int) -> None:
-        print(f"{'  ' * depth}{node}")
-        for children in node.children():
-            self._print_level(children, depth + 1)
 
     def _extract_atoms(self) -> None:
         self.atoms = list(
@@ -133,16 +119,16 @@ class RBDD(BDD):
 
         return eval(self._grammar_2_python(expression))
 
-    def _add_root(self, root: RNode) -> None:
+    def _add_root(self, root: Node) -> None:
         self.root = root
-        self.nodes[root.ID] = root
+        self.nodes[id(root)] = root
         self.names[root.name] = self.names.get(root.name, []) + [root]
 
-    def _get_nodes_by_atom_name(self, atom: str) -> list[RNode]:
+    def _get_nodes_by_atom_name(self, atom: str) -> list[Node]:
         return self.names.get(atom, []).copy()
 
-    def _get_parents_by_node_ID(self, node_ID: str) -> list[RNode]:
-        return self.parents.get(node_ID, []).copy()
+    def _get_parents_by_node_ID(self, ID: int) -> list[Node]:
+        return self.parents.get(ID, []).copy()
 
     def _remove_leaves(self) -> None:
         leaves = self._get_nodes_by_atom_name("TRUE")
@@ -152,50 +138,56 @@ class RBDD(BDD):
         parents = set(
             reduce(
                 lambda acc, nodes: acc + nodes,
-                [self._get_parents_by_node_ID(leaf.ID) for leaf in leaves],
+                [self._get_parents_by_node_ID(id(leaf)) for leaf in leaves],
                 [],
             )
         )
         assert len(parents) == len(leaves) // 2
 
-        TRUE = RNode("TRUE", "TRUE", dict())
-        FALSE = RNode("FALSE", "FALSE", dict())
+        TRUE = Node("TRUE", None, None, True, dict())  # type: ignore
+        FALSE = Node("FALSE", None, None, False, dict())  # type: ignore
 
-        self.parents["TRUE"] = []
-        self.parents["FALSE"] = []
+        TRUE_ID = id(TRUE)
+        FALSE_ID = id(FALSE)
+
+        self.parents[TRUE_ID] = []
+        self.parents[FALSE_ID] = []
 
         for node in parents:
             true_node, false_node = node.children()
 
             if true_node.name == "TRUE":
-                node.set_true(TRUE)
-                self.parents["TRUE"] += [node]
+                node.T = TRUE
+                self.parents[TRUE_ID] += [node]
             else:
-                node.set_true(FALSE)
-                self.parents["FALSE"] += [node]
+                node.T = FALSE
+                self.parents[FALSE_ID] += [node]
 
             if false_node.name == "TRUE":
-                node.set_false(TRUE)
-                self.parents["TRUE"] += [node]
+                node.F = TRUE
+                self.parents[TRUE_ID] += [node]
             else:
-                node.set_false(FALSE)
-                self.parents["FALSE"] += [node]
+                node.F = FALSE
+                self.parents[FALSE_ID] += [node]
 
         while leaves:
             node = leaves.pop()
-            self.delete_node(node)
+            self._delete_node(node)
 
-        self.nodes["TRUE"] = TRUE
-        self.nodes["FALSE"] = FALSE
+        self.nodes[TRUE_ID] = TRUE
+        self.nodes[FALSE_ID] = FALSE
 
         self.names["TRUE"] = [TRUE]
         self.names["FALSE"] = [FALSE]
+
+        self.lookup[(id(TRUE), None, None)] = TRUE
+        self.lookup[(id(FALSE), None, None)] = FALSE
 
         assert len(self.nodes) == 2 ** (len(self.atoms)) + 1
         assert len(self.names) == len(self.atoms) + 2
         assert len(self.parents) == 2 ** (len(self.atoms))
 
-    def _reduce(self, node: RNode) -> RNode:
+    def _reduce(self, node: Node) -> Node:
         if node.is_leaf():
             return node
 
@@ -203,30 +195,31 @@ class RBDD(BDD):
         FALSE = self._reduce(node.F)  # type: ignore
 
         if TRUE == FALSE:
-            self.delete_node(node)
+            self._delete_node(node)
             return TRUE
 
-        node.set_true(TRUE)
-        node.set_false(FALSE)
+        node.T = TRUE
+        node.F = FALSE
 
         return self._node_lookup(node)
 
-    def _node_lookup(self, other: RNode) -> RNode:
-        for node in self.nodes.values():
-            if other.compare(node):
-                return node
+    def _node_lookup(self, node: Node) -> Node:
+        key = (id(node), node.T, node.F)
+        if key not in self.lookup:
+            self.lookup[key] = node
 
-        return other
+        return self.lookup[key]
 
     def _recreate_state(self) -> None:
         self.nodes = dict()
         self.names = dict()
+        self.lookup = dict()
         self.parents = dict()
 
         self._navigate_tree(self.root)
 
-    def _navigate_tree(self, node: RNode) -> None:
-        self.nodes[node.ID] = node
+    def _navigate_tree(self, node: Node) -> None:
+        self.nodes[id(node)] = node
 
         names = self.names.get(node.name, [])
         if node not in names:
@@ -238,16 +231,16 @@ class RBDD(BDD):
 
         TRUE, FALSE = node.children()
 
-        TRUE_parents = self.parents.get(TRUE.ID, [])
+        TRUE_parents = self.parents.get(id(TRUE), [])
         if node not in TRUE_parents:
             TRUE_parents += [node]
 
-        FALSE_parents = self.parents.get(FALSE.ID, [])
+        FALSE_parents = self.parents.get(id(FALSE), [])
         if node not in FALSE_parents:
             FALSE_parents += [node]
 
-        self.parents[TRUE.ID] = TRUE_parents
-        self.parents[FALSE.ID] = FALSE_parents
+        self.parents[id(TRUE)] = TRUE_parents
+        self.parents[id(FALSE)] = FALSE_parents
 
         self._navigate_tree(TRUE)
         self._navigate_tree(FALSE)
