@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from alberelli.base.node import Node
+from .node import Node
 
 
 class BDD(ABC):
@@ -13,6 +13,10 @@ class BDD(ABC):
 
     @abstractmethod
     def _extract_atoms(self) -> None:
+        pass
+
+    @abstractmethod
+    def _node_lookup(self, node: Node) -> Node:
         pass
 
     @abstractmethod
