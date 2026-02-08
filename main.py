@@ -28,18 +28,38 @@ def main():
     for expression in expressions:
         bdd = ParsedSteroidBDD(expression)
 
+        print("Ridotto")
+        bdd.show()
+        print("*" * 50)
+        bdd.restrict("r", False)
+        print("Ristretto ridotto")
         bdd.show()
         print("-" * 50)
 
     bdd = InteractiveSteroidBDD()
-    a = bdd.variable("a")
-    b = bdd.variable("b")
-    c = bdd.variable("c")
 
-    bxc = bdd.apply("XOR", b, c)
-    na = bdd.apply("NOT", a)
-    expression = bdd.apply("AND", na, bxc)
+    # a = bdd.variable("a")
+    # b = bdd.variable("b")
+    # c = bdd.variable("c")
 
+    # bxc = bdd.apply("XOR", b, c)
+    # na = bdd.apply("NOT", a)
+    # expression = bdd.apply("AND", na, bxc)
+
+    p = bdd.variable("p")
+    q = bdd.variable("q")
+    r = bdd.variable("r")
+    h = bdd.variable("h")
+
+    pah = bdd.apply("AND", p, h)
+    qar = bdd.apply("AND", q, r)
+    expression = bdd.apply("OR", pah, qar)
+
+    print("Ridotto")
+    bdd.show()
+    print("*" * 50)
+    bdd.restrict("r", False)
+    print("Ristretto ridotto")
     bdd.show()
 
 

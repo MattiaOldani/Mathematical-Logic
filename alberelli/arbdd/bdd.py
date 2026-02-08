@@ -54,6 +54,21 @@ class ParsedSteroidBDD(BDD):
         self.computed[key] = node
         return node
 
+    def restrict(self, atom: str, value: bool) -> None:
+        self.root = self._restrict(self.root, atom, value)
+
+    def _restrict(self, node: Node, atom: str, value: bool) -> Node:
+        if node.is_leaf():
+            return node
+
+        if node.name == atom:
+            return node.T if value else node.F
+
+        T = self._restrict(node.T, atom, value)
+        F = self._restrict(node.F, atom, value)
+
+        return self._node_lookup(node.name, T, F)
+
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)
 
@@ -194,6 +209,21 @@ class InteractiveSteroidBDD(BDD):
                 node = self.TRUE if not n1.value else self.FALSE
 
         return node
+
+    def restrict(self, atom: str, value: bool) -> None:
+        self.root = self._restrict(self.root, atom, value)  # type: ignore
+
+    def _restrict(self, node: Node, atom: str, value: bool) -> Node:
+        if node.is_leaf():
+            return node
+
+        if node.name == atom:
+            return node.T if value else node.F
+
+        T = self._restrict(node.T, atom, value)
+        F = self._restrict(node.F, atom, value)
+
+        return self._node_lookup(node.name, T, F)
 
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)
