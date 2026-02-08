@@ -23,6 +23,13 @@ def main():
         bdd.reduce()
         print("Ristretto ridotto")
         bdd.show()
+        print("*" * 50)
+        print("Exists con albero ridotto")
+        copy = bdd.copy()
+        print(copy.exists("r", False))
+        print("*" * 50)
+        print("Check per vedere se funziona la copy")
+        bdd.show()
         print("-" * 50)
 
     for expression in expressions:
@@ -34,17 +41,16 @@ def main():
         bdd.restrict("r", False)
         print("Ristretto ridotto")
         bdd.show()
+        print("*" * 50)
+        print("Exists con albero apply")
+        copy = bdd.copy()
+        print(copy.exists("r", False))
+        print("*" * 50)
+        print("Check per vedere se funziona la copy")
+        bdd.show()
         print("-" * 50)
 
     bdd = InteractiveSteroidBDD()
-
-    # a = bdd.variable("a")
-    # b = bdd.variable("b")
-    # c = bdd.variable("c")
-
-    # bxc = bdd.apply("XOR", b, c)
-    # na = bdd.apply("NOT", a)
-    # expression = bdd.apply("AND", na, bxc)
 
     p = bdd.variable("p")
     q = bdd.variable("q")
@@ -60,6 +66,13 @@ def main():
     print("*" * 50)
     bdd.restrict("r", False)
     print("Ristretto ridotto")
+    bdd.show()
+    print("*" * 50)
+    print("Exists con albero apply")
+    copy = bdd.copy()
+    print(copy.exists("r", False))
+    print("*" * 50)
+    print("Check per vedere se funziona la copy")
     bdd.show()
 
 

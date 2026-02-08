@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from alberelli.bdd import BDD
 from alberelli.node import Node
 
@@ -86,6 +88,18 @@ class DummyBDD(BDD):
         node.T = T
         node.F = F
         return self._node_lookup(node)
+
+    def exists(self, atom: str, value: bool) -> bool:
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, value)
+        F.restrict(atom, not value)
+
+        return T._has_true_leaf() or F._has_true_leaf()
+
+    def _has_true_leaf(self) -> bool:
+        return "TRUE" in self.names
 
     def _add_node(self, node: Node, parent: Node, truth: bool) -> None:
         self.nodes[id(node)] = node
@@ -264,3 +278,13 @@ class DummyBDD(BDD):
 
         self._navigate_tree(TRUE)
         self._navigate_tree(FALSE)
+
+    def copy(self) -> DummyBDD:
+        bdd = DummyBDD(self.expression)
+        bdd.root = self.root.copy()
+        bdd.atoms = self.atoms.copy()
+        bdd._recreate_state()
+        bdd.is_reduced = self.is_reduced
+        bdd.skip_leaves = self.skip_leaves
+
+        return bdd

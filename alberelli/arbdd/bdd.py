@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from alberelli.bdd import BDD
 from alberelli.node import Node
 
@@ -68,6 +70,21 @@ class ParsedSteroidBDD(BDD):
         F = self._restrict(node.F, atom, value)
 
         return self._node_lookup(node.name, T, F)
+
+    def exists(self, atom: str, value: bool) -> bool:
+        root = self.copy()
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, value)
+        F.restrict(atom, not value)
+
+        root.apply("OR", T.root, F.root)
+
+        return root._has_true_leaf()
+
+    def _has_true_leaf(self) -> bool:
+        return id(self.TRUE) in self.nodes
 
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)
@@ -145,6 +162,15 @@ class ParsedSteroidBDD(BDD):
             self.parents[id(F)] = FALSE_parents
 
             self._navigate_tree(F)
+
+    def copy(self) -> ParsedSteroidBDD:
+        bdd = ParsedSteroidBDD(self.expression)
+        bdd.root = self.root.copy()
+        bdd.atoms = self.atoms.copy()
+        bdd._recreate_state()
+        bdd.is_reduced = self.is_reduced
+
+        return bdd
 
 
 class InteractiveSteroidBDD(BDD):
@@ -225,6 +251,21 @@ class InteractiveSteroidBDD(BDD):
 
         return self._node_lookup(node.name, T, F)
 
+    def exists(self, atom: str, value: bool) -> bool:
+        root = self.copy()
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, value)
+        F.restrict(atom, not value)
+
+        root.apply("OR", T.root, F.root)  # type: ignore
+
+        return root._has_true_leaf()
+
+    def _has_true_leaf(self) -> bool:
+        return id(self.TRUE) in self.nodes
+
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)
 
@@ -290,3 +331,11 @@ class InteractiveSteroidBDD(BDD):
             if children is None:
                 continue
             self._print_level(children, depth + 1)
+
+    def copy(self) -> InteractiveSteroidBDD:
+        bdd = InteractiveSteroidBDD()
+        if self.root is not None:
+            bdd.root = self.root.copy()
+        bdd._recreate_state()
+
+        return bdd
