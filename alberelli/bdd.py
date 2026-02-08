@@ -4,6 +4,10 @@ from alberelli.node import Node
 
 class BDD(ABC):
     @abstractmethod
+    def restrict(self, atom: str, value: bool) -> None:
+        pass
+
+    @abstractmethod
     def show(self) -> None:
         pass
 

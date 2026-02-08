@@ -9,9 +9,19 @@ def main():
     for expression in expressions:
         bdd = DummyBDD(expression)
 
+        print("Non ridotto")
         bdd.show()
         print("*" * 50)
         bdd.reduce()
+        print("Ridotto")
+        bdd.show()
+        print("*" * 50)
+        bdd.restrict("r", False)
+        print("Ristretto ma non ridotto")
+        bdd.show()
+        print("*" * 50)
+        bdd.reduce()
+        print("Ristretto ridotto")
         bdd.show()
         print("-" * 50)
 

@@ -12,6 +12,7 @@ class DummyBDD(BDD):
         self.lookup = dict()
         self.parents = dict()
         self.is_reduced = False
+        self.skip_leaves = False
 
         self.expression = expression
         self._extract_atoms()
@@ -59,10 +60,32 @@ class DummyBDD(BDD):
         if self.is_reduced:
             return
 
-        self._remove_leaves()
+        if not self.skip_leaves:
+            self._remove_leaves()
+
         self.root = self._reduce(self.root)
         self._recreate_state()
         self.is_reduced = True
+        self.skip_leaves = True
+
+    def restrict(self, atom: str, value: bool) -> None:
+        self.root = self._restrict(self.root, atom, value)
+        self._recreate_state()
+        self.is_reduced = False
+
+    def _restrict(self, node: Node, atom: str, value: bool) -> Node:
+        if node.is_leaf():
+            return node
+
+        if node.name == atom:
+            return node.T if value else node.F
+
+        T = self._restrict(node.T, atom, value)
+        F = self._restrict(node.F, atom, value)
+
+        node.T = T
+        node.F = F
+        return self._node_lookup(node)
 
     def _add_node(self, node: Node, parent: Node, truth: bool) -> None:
         self.nodes[id(node)] = node
@@ -76,9 +99,10 @@ class DummyBDD(BDD):
     def _delete_node(self, node: Node) -> None:
         del self.nodes[id(node)]
 
-        self.names[node.name].remove(node)
-        if len(self.names[node.name]) == 0:
-            del self.names[node.name]
+        if node.name in self.names:
+            self.names[node.name].remove(node)
+            if len(self.names[node.name]) == 0:
+                del self.names[node.name]
 
         to_remove_after = []
         for ID, parents in self.parents.items():
@@ -215,6 +239,7 @@ class DummyBDD(BDD):
 
     def _navigate_tree(self, node: Node) -> None:
         self.nodes[id(node)] = node
+        self.lookup[(id(node), node.T, node.F)] = node
 
         names = self.names.get(node.name, [])
         if node not in names:
