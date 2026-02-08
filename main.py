@@ -30,6 +30,11 @@ def main():
         print("*" * 50)
         print("Check per vedere se funziona la copy")
         bdd.show()
+        print("*" * 50)
+        bdd = DummyBDD("p | NOT(p) | q")
+        print("Albero con altra espressione con forall")
+        bdd.show()
+        print(bdd.forall("p"))
         print("-" * 50)
 
     for expression in expressions:
@@ -48,6 +53,11 @@ def main():
         print("*" * 50)
         print("Check per vedere se funziona la copy")
         bdd.show()
+        print("*" * 50)
+        bdd = ParsedSteroidBDD("p | NOT(p) | q")
+        print("Albero con altra espressione con forall")
+        bdd.show()
+        print(bdd.forall("p"))
         print("-" * 50)
 
     bdd = InteractiveSteroidBDD()
@@ -74,6 +84,16 @@ def main():
     print("*" * 50)
     print("Check per vedere se funziona la copy")
     bdd.show()
+    print("*" * 50)
+    bdd = InteractiveSteroidBDD()
+    p = bdd.variable("p")
+    q = bdd.variable("q")
+    np = bdd.apply("NOT", p)
+    pnp = bdd.apply("OR", p, np)
+    expression = bdd.apply("OR", pnp, q)
+    print("Albero con altra espressione con forall")
+    bdd.show()
+    print(bdd.forall("p"))
 
 
 if __name__ == "__main__":

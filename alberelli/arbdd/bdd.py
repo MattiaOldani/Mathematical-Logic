@@ -86,6 +86,21 @@ class ParsedSteroidBDD(BDD):
     def _has_true_leaf(self) -> bool:
         return id(self.TRUE) in self.nodes
 
+    def forall(self, atom: str) -> bool:
+        root = self.copy()
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, True)
+        F.restrict(atom, False)
+
+        root.apply("AND", T.root, F.root)
+
+        return root._has_no_false_leaf()
+
+    def _has_no_false_leaf(self) -> bool:
+        return id(self.FALSE) not in self.nodes
+
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)
 
@@ -265,6 +280,21 @@ class InteractiveSteroidBDD(BDD):
 
     def _has_true_leaf(self) -> bool:
         return id(self.TRUE) in self.nodes
+
+    def forall(self, atom: str) -> bool:
+        root = self.copy()
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, True)
+        F.restrict(atom, False)
+
+        root.apply("AND", T.root, F.root)  # type: ignore
+
+        return root._has_no_false_leaf()
+
+    def _has_no_false_leaf(self) -> bool:
+        return id(self.FALSE) not in self.nodes
 
     def variable(self, atom: str) -> Node:
         return self._node_lookup(atom, self.TRUE, self.FALSE)

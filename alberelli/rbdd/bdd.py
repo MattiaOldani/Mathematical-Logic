@@ -101,6 +101,18 @@ class DummyBDD(BDD):
     def _has_true_leaf(self) -> bool:
         return "TRUE" in self.names
 
+    def forall(self, atom: str) -> bool:
+        T = self.copy()
+        F = self.copy()
+
+        T.restrict(atom, True)
+        F.restrict(atom, False)
+
+        return T._has_no_false_leaf() and F._has_no_false_leaf()
+
+    def _has_no_false_leaf(self) -> bool:
+        return "FALSE" not in self.names
+
     def _add_node(self, node: Node, parent: Node, truth: bool) -> None:
         self.nodes[id(node)] = node
         self.names[node.name] = self.names.get(node.name, []) + [node]
