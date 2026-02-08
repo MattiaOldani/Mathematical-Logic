@@ -83,13 +83,7 @@ class ParsedSteroidBDD(BDD):
             self._print_level(children, depth + 1)
 
     def _extract_atoms(self) -> None:
-        self.atoms = list(
-            sorted(
-                sorted(list(set(re.compile("[a-z]+").findall(self.expression)))),
-                key=len,
-                reverse=True,
-            )
-        )
+        self.atoms = list(sorted(set(re.compile("[a-z]+").findall(self.expression))))
 
     def _node_lookup(self, atom: str, T: Node, F: Node) -> Node:
         if T == F:

@@ -95,13 +95,7 @@ class DummyBDD(BDD):
         del node
 
     def _extract_atoms(self) -> None:
-        self.atoms = list(
-            sorted(
-                sorted(list(set(re.compile("[a-z]+").findall(self.expression)))),
-                key=len,
-                reverse=True,
-            )
-        )
+        self.atoms = list(sorted(set(re.compile("[a-z]+").findall(self.expression))))
 
     def _grammar_2_python(self, expression: str) -> str:
         return (
