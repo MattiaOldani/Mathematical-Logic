@@ -4,10 +4,10 @@
 # Python stuff
 venv/
 __pycache__/
+.pytest_cache
 
 # Antlr4 stuff
 .antlr/
 
-# Slide e dispense
+# Slide
 slide/
-dispense/
