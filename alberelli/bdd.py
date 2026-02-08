@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from alberelli.node import Node
 
@@ -5,6 +7,10 @@ from alberelli.node import Node
 class BDD(ABC):
     @abstractmethod
     def restrict(self, atom: str, value: bool) -> None:
+        pass
+
+    @abstractmethod
+    def exists(self, atom: str, value: bool) -> bool:
         pass
 
     @abstractmethod
@@ -25,4 +31,8 @@ class BDD(ABC):
 
     @abstractmethod
     def _navigate_tree(self, node: Node) -> None:
+        pass
+
+    @abstractmethod
+    def copy(self) -> BDD:
         pass

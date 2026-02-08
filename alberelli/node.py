@@ -40,3 +40,9 @@ class Node:
             return True
 
         return self.name < other.name
+
+    def copy(self) -> Node:
+        T = self.T.copy() if self.T is not None else None
+        F = self.F.copy() if self.F is not None else None
+        data = self.data.copy() if self.data is not None else None
+        return Node(self.name, T, F, self.value, data)  # type: ignore
