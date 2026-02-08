@@ -191,8 +191,8 @@ class DummyBDD(BDD):
         if node.is_leaf():
             return node
 
-        TRUE = self._reduce(node.T)  # type: ignore
-        FALSE = self._reduce(node.F)  # type: ignore
+        TRUE = self._reduce(node.T)
+        FALSE = self._reduce(node.F)
 
         if TRUE == FALSE:
             self._delete_node(node)

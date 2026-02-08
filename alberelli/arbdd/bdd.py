@@ -41,15 +41,15 @@ class ParsedSteroidBDD(BDD):
             return node
 
         if n1.name == n2.name:
-            T = self.apply(operation, n1.T, n2.T)  # type: ignore
-            F = self.apply(operation, n1.F, n2.F)  # type: ignore
+            T = self.apply(operation, n1.T, n2.T)
+            F = self.apply(operation, n1.F, n2.F)
             node = self._node_lookup(n1.name, T, F)
             self.computed[key] = node
             return node
 
         first, second = sorted([n1, n2])
-        T = self.apply(operation, first.T, second)  # type: ignore
-        F = self.apply(operation, first.F, second)  # type: ignore
+        T = self.apply(operation, first.T, second)
+        F = self.apply(operation, first.F, second)
         node = self._node_lookup(first.name, T, F)
         self.computed[key] = node
         return node
@@ -65,7 +65,7 @@ class ParsedSteroidBDD(BDD):
             case "AND":
                 node = self.TRUE if n1.value and n2.value else self.FALSE
             case "XOR":
-                node = self.TRUE if n1.value ^ n2.value else self.FALSE  # type: ignore
+                node = self.TRUE if n1.value ^ n2.value else self.FALSE
             case "OR":
                 node = self.TRUE if n1.value or n2.value else self.FALSE
 
@@ -172,15 +172,15 @@ class InteractiveSteroidBDD(BDD):
             return node
 
         if n1.name == n2.name:
-            T = self.apply(operation, n1.T, n2.T)  # type: ignore
-            F = self.apply(operation, n1.F, n2.F)  # type: ignore
+            T = self.apply(operation, n1.T, n2.T)
+            F = self.apply(operation, n1.F, n2.F)
             node = self._node_lookup(n1.name, T, F)
             self.computed[key] = node
             return node
 
         first, second = sorted([n1, n2])
-        T = self.apply(operation, first.T, second)  # type: ignore
-        F = self.apply(operation, first.F, second)  # type: ignore
+        T = self.apply(operation, first.T, second)
+        F = self.apply(operation, first.F, second)
         node = self._node_lookup(first.name, T, F)
         self.computed[key] = node
         return node
