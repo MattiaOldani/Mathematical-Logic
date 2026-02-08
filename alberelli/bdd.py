@@ -14,6 +14,10 @@ class BDD(ABC):
         pass
 
     @abstractmethod
+    def forall(self, atom: str) -> bool:
+        pass
+
+    @abstractmethod
     def show(self) -> None:
         pass
 
