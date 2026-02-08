@@ -2,9 +2,9 @@ from alberelli.arbdd.bdd import SteroidBDD
 from alberelli.node import Node
 
 from antlr4 import CommonTokenStream, InputStream
-from .PLLexer import PLLexer
-from .PLParser import PLParser
-from .PLVisitor import PLVisitor
+from alberelli.builder.PLLexer import PLLexer
+from alberelli.builder.PLParser import PLParser
+from alberelli.builder.PLVisitor import PLVisitor
 
 
 class Builder(PLVisitor):

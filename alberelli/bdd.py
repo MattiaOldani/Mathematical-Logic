@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .node import Node
+from alberelli.node import Node
 
 
 class BDD(ABC):
