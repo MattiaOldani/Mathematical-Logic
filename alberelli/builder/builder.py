@@ -1,4 +1,4 @@
-from alberelli.arbdd.bdd import SteroidBDD
+from alberelli.arbdd.bdd import ParsedSteroidBDD
 from alberelli.node import Node
 
 from antlr4 import CommonTokenStream, InputStream
@@ -8,13 +8,16 @@ from alberelli.builder.PLVisitor import PLVisitor
 
 
 class Builder(PLVisitor):
-    def __init__(self, BDD: SteroidBDD) -> None:
+    def __init__(self, BDD: ParsedSteroidBDD) -> None:
         self.BDD = BDD
 
         lexer = PLLexer(InputStream(self.BDD.expression))
         stream = CommonTokenStream(lexer)
         parser = PLParser(stream)
         self.tree = parser.start()
+
+    def create_tree(self) -> Node:
+        return super().visit(self.tree)
 
     def visitAtom(self, ctx) -> Node:
         if ctx.ATOM():

@@ -19,10 +19,24 @@ class Node:
         if not isinstance(other, Node):
             return False
 
-        return self.name == other.name and self.T == other.T and self.F == other.F
+        return (
+            self.name == other.name
+            and self.T == other.T
+            and self.F == other.F
+            and self.value == other.value
+        )
 
     def __str__(self) -> str:
         return f"[Name:{self.name}][Value:{self.value}]"
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __lt__(self, other: Node) -> bool:
+        if self.name is None:
+            return False
+
+        if other.name is None:
+            return True
+
+        return self.name < other.name

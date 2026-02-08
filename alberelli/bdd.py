@@ -16,10 +16,6 @@ class BDD(ABC):
         pass
 
     @abstractmethod
-    def _node_lookup(self, node: Node) -> Node:
-        pass
-
-    @abstractmethod
     def _recreate_state(self) -> None:
         pass
 
