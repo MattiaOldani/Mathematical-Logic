@@ -87,12 +87,13 @@ class DummyBDD(BDD):
                 if len(parents) == 0:
                     to_remove_after += [ID]
 
-        assert len(to_remove_after) == 0
-
         if id(node) in self.parents:
             del self.parents[id(node)]
 
         del node
+
+        for ID in to_remove_after:
+            self._delete_node(self.nodes[ID])
 
     def _extract_atoms(self) -> None:
         self.atoms = list(sorted(set(re.compile("[a-z]+").findall(self.expression))))
