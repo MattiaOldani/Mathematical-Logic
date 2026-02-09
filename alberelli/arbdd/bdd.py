@@ -283,6 +283,7 @@ class InteractiveSteroidBDD(BDD):
 
     def restrict(self, atom: str, value: bool) -> None:
         self.root = self._restrict(self.root, atom, value)  # type: ignore
+        self._recreate_state()
 
     def _restrict(self, node: Node, atom: str, value: bool) -> Node:
         if node.is_leaf():
@@ -304,6 +305,11 @@ class InteractiveSteroidBDD(BDD):
         T.restrict(atom, value)
         F.restrict(atom, not value)
 
+        T.TRUE.name = None  # type: ignore
+        T.FALSE.name = None  # type: ignore
+        F.TRUE.name = None  # type: ignore
+        F.FALSE.name = None  # type: ignore
+
         root.apply("OR", T.root, F.root)  # type: ignore
 
         return root._has_true_leaf()
@@ -318,6 +324,11 @@ class InteractiveSteroidBDD(BDD):
 
         T.restrict(atom, True)
         F.restrict(atom, False)
+
+        T.TRUE.name = None  # type: ignore
+        T.FALSE.name = None  # type: ignore
+        F.TRUE.name = None  # type: ignore
+        F.FALSE.name = None  # type: ignore
 
         root.apply("AND", T.root, F.root)  # type: ignore
 
@@ -394,8 +405,25 @@ class InteractiveSteroidBDD(BDD):
 
     def copy(self) -> InteractiveSteroidBDD:
         bdd = InteractiveSteroidBDD()
+
         if self.root is not None:
             bdd.root = self.root.copy()
+
+        bdd.TRUE = Node(None, None, None, True, None)  # type: ignore
+        bdd.FALSE = Node(None, None, None, False, None)  # type: ignore
+
+        bdd.root = bdd._search_TF(bdd.root)  # type: ignore
         bdd._recreate_state()
 
         return bdd
+
+    def _search_TF(self, node: Node) -> Node:
+        if node.name == "TRUE":
+            return self.TRUE
+
+        if node.name == "FALSE":
+            return self.FALSE
+
+        node.T = self._search_TF(node.T)
+        node.F = self._search_TF(node.F)
+        return node
