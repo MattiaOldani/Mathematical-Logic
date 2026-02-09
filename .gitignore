@@ -8,6 +8,3 @@ __pycache__/
 
 # Antlr4 stuff
 .antlr/
-
-# Slide
-slide/
