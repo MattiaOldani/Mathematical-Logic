@@ -58,6 +58,7 @@ class ParsedSteroidBDD(BDD):
 
     def restrict(self, atom: str, value: bool) -> None:
         self.root = self._restrict(self.root, atom, value)
+        self._recreate_state()
 
     def _restrict(self, node: Node, atom: str, value: bool) -> Node:
         if node.is_leaf():
@@ -73,11 +74,18 @@ class ParsedSteroidBDD(BDD):
 
     def exists(self, atom: str, value: bool) -> bool:
         root = self.copy()
+        root.is_reduced = False
+
         T = self.copy()
         F = self.copy()
 
         T.restrict(atom, value)
         F.restrict(atom, not value)
+
+        T.TRUE.name = None  # type: ignore
+        T.FALSE.name = None  # type: ignore
+        F.TRUE.name = None  # type: ignore
+        F.FALSE.name = None  # type: ignore
 
         root.apply("OR", T.root, F.root)
 
@@ -88,11 +96,18 @@ class ParsedSteroidBDD(BDD):
 
     def forall(self, atom: str) -> bool:
         root = self.copy()
+        root.is_reduced = False
+
         T = self.copy()
         F = self.copy()
 
         T.restrict(atom, True)
         F.restrict(atom, False)
+
+        T.TRUE.name = None  # type: ignore
+        T.FALSE.name = None  # type: ignore
+        F.TRUE.name = None  # type: ignore
+        F.FALSE.name = None  # type: ignore
 
         root.apply("AND", T.root, F.root)
 
@@ -181,11 +196,26 @@ class ParsedSteroidBDD(BDD):
     def copy(self) -> ParsedSteroidBDD:
         bdd = ParsedSteroidBDD(self.expression)
         bdd.root = self.root.copy()
+
+        bdd.TRUE = Node(None, None, None, True, None)  # type: ignore
+        bdd.FALSE = Node(None, None, None, False, None)  # type: ignore
+
         bdd.atoms = self.atoms.copy()
+        bdd.root = bdd._search_TF(bdd.root)
         bdd._recreate_state()
-        bdd.is_reduced = self.is_reduced
 
         return bdd
+
+    def _search_TF(self, node: Node) -> Node:
+        if node.name == "TRUE":
+            return self.TRUE
+
+        if node.name == "FALSE":
+            return self.FALSE
+
+        node.T = self._search_TF(node.T)
+        node.F = self._search_TF(node.F)
+        return node
 
 
 class InteractiveSteroidBDD(BDD):
