@@ -43,10 +43,6 @@ class DummyBDD(BDD):
 
                     self._add_node(to_add, node, value)
 
-        assert len(self.nodes) == 2 ** (len(self.atoms) + 1) - 1
-        assert len(self.names) in {len(self.atoms) + 1, len(self.atoms) + 2}
-        assert len(self.parents) == 2 ** (len(self.atoms) + 1) - 2
-
     def show(self) -> None:
         print(f"Expression: {self.expression}")
         self._print_level(self.root, 0)
@@ -85,9 +81,7 @@ class DummyBDD(BDD):
         T = self._restrict(node.T, atom, value)
         F = self._restrict(node.F, atom, value)
 
-        node.T = T
-        node.F = F
-        return self._node_lookup(node)
+        return self._node_lookup(node.name, T, F)
 
     def exists(self, atom: str, value: bool) -> bool:
         T = self.copy()
@@ -178,7 +172,6 @@ class DummyBDD(BDD):
     def _remove_leaves(self) -> None:
         leaves = self._get_nodes_by_atom_name("TRUE")
         leaves += self._get_nodes_by_atom_name("FALSE")
-        assert len(leaves) == 2 ** len(self.atoms)
 
         parents = set(
             reduce(
@@ -187,7 +180,6 @@ class DummyBDD(BDD):
                 [],
             )
         )
-        assert len(parents) == len(leaves) // 2
 
         TRUE = Node("TRUE", None, None, True, dict())  # type: ignore
         FALSE = Node("FALSE", None, None, False, dict())  # type: ignore
@@ -195,42 +187,36 @@ class DummyBDD(BDD):
         TRUE_ID = id(TRUE)
         FALSE_ID = id(FALSE)
 
-        self.parents[TRUE_ID] = []
-        self.parents[FALSE_ID] = []
-
         for node in parents:
             true_node, false_node = node.children()
 
             if true_node.name == "TRUE":
                 node.T = TRUE
-                self.parents[TRUE_ID] += [node]
+                self.parents[TRUE_ID] = self.parents.get(TRUE_ID, []) + [node]
             else:
                 node.T = FALSE
-                self.parents[FALSE_ID] += [node]
+                self.parents[FALSE_ID] = self.parents.get(FALSE_ID, []) + [node]
 
             if false_node.name == "TRUE":
                 node.F = TRUE
-                self.parents[TRUE_ID] += [node]
+                self.parents[TRUE_ID] = self.parents.get(TRUE_ID, []) + [node]
             else:
                 node.F = FALSE
-                self.parents[FALSE_ID] += [node]
+                self.parents[FALSE_ID] = self.parents.get(FALSE_ID, []) + [node]
 
         while leaves:
             node = leaves.pop()
             self._delete_node(node)
 
-        self.nodes[TRUE_ID] = TRUE
-        self.nodes[FALSE_ID] = FALSE
+        if len(self.parents.get(TRUE_ID, [])) > 0:
+            self.nodes[TRUE_ID] = TRUE
+            self.names["TRUE"] = [TRUE]
+            self.lookup[(id(TRUE), None, None)] = TRUE
 
-        self.names["TRUE"] = [TRUE]
-        self.names["FALSE"] = [FALSE]
-
-        self.lookup[(id(TRUE), None, None)] = TRUE
-        self.lookup[(id(FALSE), None, None)] = FALSE
-
-        assert len(self.nodes) == 2 ** (len(self.atoms)) + 1
-        assert len(self.names) == len(self.atoms) + 2
-        assert len(self.parents) == 2 ** (len(self.atoms))
+        if len(self.parents.get(FALSE_ID, [])) > 0:
+            self.nodes[FALSE_ID] = FALSE
+            self.names["FALSE"] = [FALSE]
+            self.lookup[(id(FALSE), None, None)] = FALSE
 
     def _reduce(self, node: Node) -> Node:
         if node.is_leaf():
@@ -243,14 +229,13 @@ class DummyBDD(BDD):
             self._delete_node(node)
             return TRUE
 
-        node.T = TRUE
-        node.F = FALSE
+        return self._node_lookup(node.name, TRUE, FALSE)
 
-        return self._node_lookup(node)
+    def _node_lookup(self, name: str, T: Node, F: Node) -> Node:
+        key = (name, T, F)
 
-    def _node_lookup(self, node: Node) -> Node:
-        key = (id(node), node.T, node.F)
         if key not in self.lookup:
+            node = Node(name, T, F, None, None)  # type: ignore
             self.lookup[key] = node
 
         return self.lookup[key]
