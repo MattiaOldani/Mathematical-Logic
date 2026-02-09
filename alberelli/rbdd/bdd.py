@@ -83,12 +83,12 @@ class DummyBDD(BDD):
 
         return self._node_lookup(node.name, T, F)
 
-    def exists(self, atom: str, value: bool) -> bool:
+    def exists(self, atom: str) -> bool:
         T = self.copy()
         F = self.copy()
 
-        T.restrict(atom, value)
-        F.restrict(atom, not value)
+        T.restrict(atom, True)
+        F.restrict(atom, False)
 
         return T._has_true_leaf() or F._has_true_leaf()
 

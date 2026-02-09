@@ -72,15 +72,15 @@ class ParsedSteroidBDD(BDD):
 
         return self._node_lookup(node.name, T, F)
 
-    def exists(self, atom: str, value: bool) -> bool:
+    def exists(self, atom: str) -> bool:
         root = self.copy()
         root.is_reduced = False
 
         T = self.copy()
         F = self.copy()
 
-        T.restrict(atom, value)
-        F.restrict(atom, not value)
+        T.restrict(atom, True)
+        F.restrict(atom, False)
 
         T.TRUE.name = None  # type: ignore
         T.FALSE.name = None  # type: ignore
@@ -297,13 +297,13 @@ class InteractiveSteroidBDD(BDD):
 
         return self._node_lookup(node.name, T, F)
 
-    def exists(self, atom: str, value: bool) -> bool:
+    def exists(self, atom: str) -> bool:
         root = self.copy()
         T = self.copy()
         F = self.copy()
 
-        T.restrict(atom, value)
-        F.restrict(atom, not value)
+        T.restrict(atom, True)
+        F.restrict(atom, False)
 
         T.TRUE.name = None  # type: ignore
         T.FALSE.name = None  # type: ignore

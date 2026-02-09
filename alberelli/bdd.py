@@ -10,7 +10,7 @@ class BDD(ABC):
         pass
 
     @abstractmethod
-    def exists(self, atom: str, value: bool) -> bool:
+    def exists(self, atom: str) -> bool:
         pass
 
     @abstractmethod

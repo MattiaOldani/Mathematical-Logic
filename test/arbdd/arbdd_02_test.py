@@ -26,8 +26,8 @@ def test_expression_reduce_L1():
     assert len(another.nodes) == 4
     assert len(another.parents) == 3
 
-    assert bdd.exists("p", True)
-    assert bdd.exists("p", False)
+    assert bdd.exists("p")
+    assert bdd.exists("p")
     assert not bdd.forall("p")
 
 
@@ -56,8 +56,8 @@ def test_expression_reduce_L2():
     assert len(another.nodes) == 5
     assert len(another.parents) == 4
 
-    assert bdd.exists("p", True)
-    assert bdd.exists("p", False)
+    assert bdd.exists("p")
+    assert bdd.exists("p")
     assert not bdd.forall("p")
 
 
@@ -99,8 +99,8 @@ def test_expression_apply():
     assert len(another.nodes) == 3
     assert len(another.parents) == 2
 
-    assert bdd.exists("p", True)
-    assert bdd.exists("p", False)
+    assert bdd.exists("p")
+    assert bdd.exists("p")
     assert not bdd.forall("p")
 
 
@@ -115,8 +115,8 @@ def test_tauto():
     assert len(bdd.nodes) == 1
     assert len(bdd.parents) == 0
 
-    assert bdd.exists("p", True)
-    assert bdd.exists("p", False)
+    assert bdd.exists("p")
+    assert bdd.exists("p")
     assert bdd.forall("p")
 
 
@@ -131,6 +131,6 @@ def test_falsity():
     assert len(bdd.nodes) == 1
     assert len(bdd.parents) == 0
 
-    assert not bdd.exists("p", True)
-    assert not bdd.exists("p", False)
+    assert not bdd.exists("p")
+    assert not bdd.exists("p")
     assert not bdd.forall("p")

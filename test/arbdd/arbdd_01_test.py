@@ -44,22 +44,17 @@ def test_restrict(expression, atom, value, nodes, parents):
 
 
 EX_FA = [
-    ("p | (q & r)", "p", True, True, False),
-    ("p | (q & r)", "p", False, True, False),
-    ("p ^ q ^ r", "p", True, True, False),
-    ("p ^ q ^ r", "p", False, True, False),
-    ("(p ^ q) ^ (p ^ r)", "q", True, True, False),
-    ("(p ^ q) ^ (p ^ r)", "q", False, True, False),
-    ("p | NOT(p)", "p", True, True, True),
-    ("p | NOT(p)", "p", False, True, True),
-    ("p & NOT(p)", "p", True, False, False),
-    ("p & NOT(p)", "p", False, False, False),
+    ("p | (q & r)", "p", True, False),
+    ("p ^ q ^ r", "p", True, False),
+    ("(p ^ q) ^ (p ^ r)", "q", True, False),
+    ("p | NOT(p)", "p", True, True),
+    ("p & NOT(p)", "p", False, False),
 ]
 
 
-@pytest.mark.parametrize("expression,atom,value,exists,forall", EX_FA)
-def test_exists_forall(expression, atom, value, exists, forall):
+@pytest.mark.parametrize("expression,atom,exists,forall", EX_FA)
+def test_exists_forall(expression, atom, exists, forall):
     bdd = ParsedSteroidBDD(expression)
 
-    assert bdd.exists(atom, value) == exists
+    assert bdd.exists(atom) == exists
     assert bdd.forall(atom) == forall
