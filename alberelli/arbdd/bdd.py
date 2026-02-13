@@ -19,6 +19,8 @@ class ParsedSteroidBDD(BDD):
         self.TRUE = TRUE
         self.FALSE = FALSE
 
+        self._cache = dict()
+
         self.unique = dict()
         self.computed = dict()
         self.is_reduced = False
@@ -195,27 +197,37 @@ class ParsedSteroidBDD(BDD):
 
     def copy(self) -> ParsedSteroidBDD:
         bdd = ParsedSteroidBDD(self.expression)
-        bdd.root = self.root.copy()
 
-        bdd.TRUE = Node(None, None, None, True, None)  # type: ignore
-        bdd.FALSE = Node(None, None, None, False, None)  # type: ignore
+        bdd.root = bdd._copy_without_copy(self.root)
+        bdd._cache = dict()
 
         bdd.atoms = self.atoms.copy()
-        bdd.root = bdd._search_TF(bdd.root)
         bdd._recreate_state()
 
         return bdd
 
-    def _search_TF(self, node: Node) -> Node:
+    def _copy_without_copy(self, node: Node) -> Node:
+        if node is None:
+            return None
+
+        if id(node) in self._cache:
+            return self._cache[id(node)]
+
+        new_node = Node(
+            node.name,
+            self._copy_without_copy(node.T),  # type: ignore
+            self._copy_without_copy(node.F),  # type: ignore
+            node.value,
+            node.data.copy() if node.data is not None else None,  # type: ignore
+        )
+
         if node.name == "TRUE":
-            return self.TRUE
+            self.TRUE = new_node
+        elif node.name == "FALSE":
+            self.FALSE = new_node
 
-        if node.name == "FALSE":
-            return self.FALSE
-
-        node.T = self._search_TF(node.T)
-        node.F = self._search_TF(node.F)
-        return node
+        self._cache[id(node)] = new_node
+        return new_node
 
 
 class InteractiveSteroidBDD(BDD):
@@ -227,6 +239,8 @@ class InteractiveSteroidBDD(BDD):
 
         self.TRUE = TRUE
         self.FALSE = FALSE
+
+        self._cache = dict()
 
         self.unique = dict()
         self.computed = dict()
@@ -407,23 +421,32 @@ class InteractiveSteroidBDD(BDD):
         bdd = InteractiveSteroidBDD()
 
         if self.root is not None:
-            bdd.root = self.root.copy()
+            bdd.root = bdd._copy_without_copy(self.root)
+            bdd._cache = dict()
 
-        bdd.TRUE = Node(None, None, None, True, None)  # type: ignore
-        bdd.FALSE = Node(None, None, None, False, None)  # type: ignore
-
-        bdd.root = bdd._search_TF(bdd.root)  # type: ignore
-        bdd._recreate_state()
+            bdd._recreate_state()
 
         return bdd
 
-    def _search_TF(self, node: Node) -> Node:
+    def _copy_without_copy(self, node: Node) -> Node:
+        if node is None:
+            return None
+
+        if id(node) in self._cache:
+            return self._cache[id(node)]
+
+        new_node = Node(
+            node.name,
+            self._copy_without_copy(node.T),  # type: ignore
+            self._copy_without_copy(node.F),  # type: ignore
+            node.value,
+            node.data.copy() if node.data is not None else None,  # type: ignore
+        )
+
         if node.name == "TRUE":
-            return self.TRUE
+            self.TRUE = new_node
+        elif node.name == "FALSE":
+            self.FALSE = new_node
 
-        if node.name == "FALSE":
-            return self.FALSE
-
-        node.T = self._search_TF(node.T)
-        node.F = self._search_TF(node.F)
-        return node
+        self._cache[id(node)] = new_node
+        return new_node

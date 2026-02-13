@@ -16,6 +16,8 @@ class DummyBDD(BDD):
         self.is_reduced = False
         self.skip_leaves = False
 
+        self._cache = dict()
+
         self.expression = expression
         self._extract_atoms()
 
@@ -278,10 +280,36 @@ class DummyBDD(BDD):
 
     def copy(self) -> DummyBDD:
         bdd = DummyBDD(self.expression)
-        bdd.root = self.root.copy()
+
+        bdd.root = bdd._copy_without_copy(self.root)
+        bdd._cache = dict()
+
         bdd.atoms = self.atoms.copy()
-        bdd._recreate_state()
         bdd.is_reduced = self.is_reduced
         bdd.skip_leaves = self.skip_leaves
+        bdd._recreate_state()
 
         return bdd
+
+    def _copy_without_copy(self, node: Node) -> Node:
+        if node is None:
+            return None
+
+        if id(node) in self._cache:
+            return self._cache[id(node)]
+
+        new_node = Node(
+            node.name,
+            self._copy_without_copy(node.T),  # type: ignore
+            self._copy_without_copy(node.F),  # type: ignore
+            node.value,
+            node.data.copy() if node.data is not None else None,  # type: ignore
+        )
+
+        if node.name == "TRUE":
+            self.TRUE = new_node
+        elif node.name == "FALSE":
+            self.FALSE = new_node
+
+        self._cache[id(node)] = new_node
+        return new_node
