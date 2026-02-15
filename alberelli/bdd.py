@@ -3,6 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from alberelli.node import Node
 
+import graphviz
+
 
 class BDD(ABC):
     @abstractmethod
@@ -39,4 +41,12 @@ class BDD(ABC):
 
     @abstractmethod
     def copy(self) -> BDD:
+        pass
+
+    @abstractmethod
+    def print_in_dot(self, title: str) -> None:
+        pass
+
+    @abstractmethod
+    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
         pass

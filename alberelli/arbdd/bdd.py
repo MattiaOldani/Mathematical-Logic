@@ -3,6 +3,7 @@ from __future__ import annotations
 from alberelli.bdd import BDD
 from alberelli.node import Node
 
+import graphviz
 import re
 
 
@@ -229,6 +230,33 @@ class ParsedSteroidBDD(BDD):
         self._cache[id(node)] = new_node
         return new_node
 
+    def print_in_dot(self, title: str) -> None:
+        backup_T = self.TRUE.name
+        backup_F = self.FALSE.name
+
+        self.TRUE.name = "TRUE"
+        self.FALSE.name = "FALSE"
+
+        graph = graphviz.Digraph()
+        self._navigate_for_print(self.root, graph)  # type: ignore
+
+        graph.render(title, format="svg", cleanup=True)
+
+        self.TRUE.name = backup_T
+        self.FALSE.name = backup_F
+
+    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
+        graph.node(str(id(node)), node.name)
+
+        if node.is_leaf():
+            return
+
+        graph.edge(str(id(node)), str(id(node.T)))
+        graph.edge(str(id(node)), str(id(node.F)), style="dashed")
+
+        self._navigate_for_print(node.T, graph)
+        self._navigate_for_print(node.F, graph)
+
 
 class InteractiveSteroidBDD(BDD):
     def __init__(self) -> None:
@@ -450,3 +478,30 @@ class InteractiveSteroidBDD(BDD):
 
         self._cache[id(node)] = new_node
         return new_node
+
+    def print_in_dot(self, title: str) -> None:
+        backup_T = self.TRUE.name
+        backup_F = self.FALSE.name
+
+        self.TRUE.name = "TRUE"
+        self.FALSE.name = "FALSE"
+
+        graph = graphviz.Digraph()
+        self._navigate_for_print(self.root, graph)  # type: ignore
+
+        graph.render(title, format="svg", cleanup=True)
+
+        self.TRUE.name = backup_T
+        self.FALSE.name = backup_F
+
+    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
+        graph.node(str(id(node)), node.name)
+
+        if node.is_leaf():
+            return
+
+        graph.edge(str(id(node)), str(id(node.T)))
+        graph.edge(str(id(node)), str(id(node.F)), style="dashed")
+
+        self._navigate_for_print(node.T, graph)
+        self._navigate_for_print(node.F, graph)

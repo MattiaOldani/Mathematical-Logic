@@ -4,6 +4,7 @@ from alberelli.bdd import BDD
 from alberelli.node import Node
 
 from functools import reduce
+import graphviz
 import re
 
 
@@ -315,3 +316,21 @@ class DummyBDD(BDD):
 
         self._cache[id(node)] = new_node
         return new_node
+
+    def print_in_dot(self, title: str) -> None:
+        graph = graphviz.Digraph()
+        self._navigate_for_print(self.root, graph)  # type: ignore
+
+        graph.render(title, format="svg", cleanup=True)
+
+    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
+        graph.node(str(id(node)), node.name)
+
+        if node.is_leaf():
+            return
+
+        graph.edge(str(id(node)), str(id(node.T)))
+        graph.edge(str(id(node)), str(id(node.F)), style="dashed")
+
+        self._navigate_for_print(node.T, graph)
+        self._navigate_for_print(node.F, graph)
