@@ -119,12 +119,14 @@ class DummyBDD(BDD):
         self.parents[id(node)] = self.parents.get(id(node), []) + [parent]
 
     def _delete_node(self, node: Node) -> None:
-        del self.nodes[id(node)]
+        if id(node) in self.nodes:
+            del self.nodes[id(node)]
 
         if node.name in self.names:
-            self.names[node.name].remove(node)
-            if len(self.names[node.name]) == 0:
-                del self.names[node.name]
+            if node in self.names[node.name]:
+                self.names[node.name].remove(node)
+                if len(self.names[node.name]) == 0:
+                    del self.names[node.name]
 
         to_remove_after = []
         for ID, parents in self.parents.items():
