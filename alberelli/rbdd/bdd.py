@@ -319,12 +319,18 @@ class DummyBDD(BDD):
 
     def print_in_dot(self, title: str) -> None:
         graph = graphviz.Digraph()
-        self._navigate_for_print(self.root, graph)  # type: ignore
+        self._navigate_for_print(self.root, graph, set())  # type: ignore
 
         graph.render(title, format="svg", cleanup=True)
 
-    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
+    def _navigate_for_print(
+        self, node: Node, graph: graphviz.Digraph, visited: set[Node]
+    ) -> None:
+        if node in visited:
+            return
+
         graph.node(str(id(node)), node.name)
+        visited.add(node)
 
         if node.is_leaf():
             return
@@ -332,5 +338,5 @@ class DummyBDD(BDD):
         graph.edge(str(id(node)), str(id(node.T)))
         graph.edge(str(id(node)), str(id(node.F)), style="dashed")
 
-        self._navigate_for_print(node.T, graph)
-        self._navigate_for_print(node.F, graph)
+        self._navigate_for_print(node.T, graph, visited)
+        self._navigate_for_print(node.F, graph, visited)

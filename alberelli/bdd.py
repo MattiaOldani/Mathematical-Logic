@@ -48,5 +48,7 @@ class BDD(ABC):
         pass
 
     @abstractmethod
-    def _navigate_for_print(self, node: Node, graph: graphviz.Digraph) -> None:
+    def _navigate_for_print(
+        self, node: Node, graph: graphviz.Digraph, visited: set[Node]
+    ) -> None:
         pass
