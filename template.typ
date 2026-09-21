@@ -5,14 +5,12 @@
 
   set par(justify: true)
 
-  set page(numbering: "1")
-
   set heading(numbering: "1.")
 
   set list(indent: 1.2em)
   set enum(indent: 1.2em)
 
-  align(center)[
+  align(center + horizon)[
     #block(text(1.5em, [Università degli Studi di Milano]))
 
     #block(text(1.5em, [Dipartimento di Informatica]))
@@ -24,10 +22,6 @@
     #v(25pt)
 
     #block(text(2em, weight: 900, title))
-
-    #v(50pt)
-
-    #image("sezioni/assets/bdd.png", width: 65%)
   ]
 
   show outline.entry: it => {
@@ -67,6 +61,8 @@
   outline(indent: 2em)
 
   pagebreak()
+
+  set page(numbering: "1")
 
   body
 }
